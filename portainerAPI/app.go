@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"github.com/vladislavhirko/portaineerPlugin/portainerAPI/types"
-
 )
 
 //Структура клиента для портейнера
@@ -95,30 +94,50 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 // Находит в списках работающих сейчас контейнеров и работающих Х сек. назад два одинаковых, если такие имеются так же сравнивает статусы
 // так как тут хранятся все контейнера и стопнутые тоже, сравнивает на то разные ли они? и если разные то проверяет на то какой сейчас статус
 // если exited то добавляет в список упавших
+//TODO заменить два слайса на 2 мапы
+// TODO изменить название функции
 func (pClient *ClientPortaineer) StopedTrigger() {
 	for _, lastContainer := range pClient.LastContainers {
-		isDroped := false
 		for _, currentContainer := range pClient.CurrentContainers {
 			if (lastContainer.Names == currentContainer.Names &&
 				lastContainer.State != currentContainer.State &&
 				currentContainer.State == "exited") {
-				isDroped = true
+				pClient.StopedContainers = append(pClient.StopedContainers, lastContainer)
 				break
 			}
-		}
-		if isDroped {
-			pClient.StopedContainers = append(pClient.StopedContainers, lastContainer)
 		}
 	}
 }
 
 // Создает список упавших контейнеров которые не восстановились
+// TODO изменить название функции
 func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) {
 	stopedWithError := make(types.Containers, 0)
+	pClient.GetDropedLogs() //в будущем тут будут доставаться логи упавших контейнеров
 	for _, stopedContainer := range pClient.StopedContainers {
 		stopedWithError = append(stopedWithError, stopedContainer)
-		//fmt.Println("\n",stopedContainer.State,"\n")
 	}
 	pClient.StopedContainers = make(types.Containers, 0)
 	return stopedWithError, nil
+}
+
+//TODO: сделать так что б функция работала
+func (pClient *ClientPortaineer) GetDropedLogs() error{
+	for _, stopedContainer := range pClient.StopedContainers {
+		client := &http.Client{}
+		req, err := http.NewRequest(
+			"GET", "http://localhost:9000/api/endpoints/1/docker/containers/"+stopedContainer.Id[:12]+"/logs?tail=10&", nil,
+		)
+		if err != nil {
+			return err
+		}
+		req.Header.Add("Authorization", pClient.Jwt)
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		fmt.Println(string(body))
+	}
+	return nil
 }
