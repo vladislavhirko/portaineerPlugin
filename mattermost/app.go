@@ -4,21 +4,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mattermost/mattermost-server/model"
+	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/mattermost/types"
 	pTypes "github.com/vladislavhirko/portaineerPlugin/portainerAPI/types"
+	"log"
 )
 
 type MattermostClient struct{
 	Client *model.Client4
 	User *model.User
 	Chanels types.Chanels
+	DB database.LevelDB
 }
 
-func NewMattermostClient() MattermostClient{
+func NewMattermostClient(ldb database.LevelDB) MattermostClient{
 	return MattermostClient{
 		Client: &model.Client4{},
 		User:   &model.User{},
 		Chanels: make(types.Chanels, 0),
+		DB: ldb,
 	}
 }
 
@@ -53,16 +57,37 @@ func (mClient *MattermostClient) GetallChanels() error{
 }
 
 //Отправляет сообщение всем каналам
-// TODO фильтр для каналов, так что б дропнутые контейнера попадали туда куда надо
+// Делается запрос с бд для каждого упавшего контейнера, достаем название канала, далее бегаем по всем каналам и в нужный нам отправляем инфу
 func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patternChanel string) error{
-	for _, chanel := range mClient.Chanels {
-		post := &model.Post{}
-		post.ChannelId = chanel.ID
-		for _, container := range containers {
-			post.Message = "Fault: "+container.Names[0]
-			_, resp := mClient.Client.CreatePost(post)
-			if resp.Error != nil {
-				return resp.Error
+	//for _, chanel := range mClient.Chanels {
+	//	post := &model.Post{}
+	//	post.ChannelId = chanel.ID
+	//	for _, container := range containers {
+	//		post.Message = "Fault: "+container.Names[0]
+	//		_, resp := mClient.Client.CreatePost(post)
+	//		if resp.Error != nil {
+	//			return resp.Error
+	//		}
+	//	}
+	//}
+
+
+	// Листает список всех каналов и когда находит тот который в бд, отправляет туда
+	for _, container := range containers {
+		chanelName, err := mClient.DB.Get(container.Names[0])
+		if err != nil{
+			log.Println("No chanel for ", container)
+			continue
+		}
+		for _, chanel := range mClient.Chanels {
+			if chanelName == chanel.Name{
+				post := &model.Post{}
+				post.ChannelId = chanel.ID
+				post.Message = "Fault: "+container.Names[0]
+				_, resp := mClient.Client.CreatePost(post)
+				if resp.Error != nil {
+					return resp.Error
+				}
 			}
 		}
 	}

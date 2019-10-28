@@ -17,9 +17,9 @@ func main() {
 	wg.Add(3)
 	stopedContainerChan := make(chan types.Containers)
 	go DockerChecker(stopedContainerChan, wg) //Раз в Х сеунд делает запросы в апи докера
-	go Sender(stopedContainerChan, wg) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
 	ldb := database.NewLevelDB()
 	ldb.Open() //открывает конекшн с базой данных
+	go Sender(ldb, stopedContainerChan, wg) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
 	go rest.RunServer(ldb, wg) //В будущем тут будет рест
 	wg.Wait()
 }
@@ -59,26 +59,26 @@ func DockerChecker(stopedContainerChan chan types.Containers, wg sync.WaitGroup)
 // Функция которая рассылает список упавших контейнеров в метермост, пока что во все каналы
 //Закоменчено потому что мы не можем сыпать логи в метермост  пока что
 // TODO рассылка в каналы по названию
-func Sender(stopedContainerChan chan types.Containers, wg sync.WaitGroup) {
+func Sender(ldb database.LevelDB, stopedContainerChan chan types.Containers, wg sync.WaitGroup) {
 	defer wg.Done()
-	//mClient := MattermostStart()
+	mClient := MattermostStart(ldb)
 	for {
 		dropedContainers := <-stopedContainerChan
-		fmt.Println("ALAAAAAAH AKBAR", dropedContainers)
-		//err := mClient.GetallChanels()
-		//if err != nil{
-		//	fmt.Println(err)
-		//}
-		//err = mClient.SendMessage(dropedContainers, "")
-		//if err != nil{
-		//	fmt.Println(err)
-		//}
+		//fmt.Println("ALAAAAAAH AKBAR", dropedContainers)
+		err := mClient.GetallChanels()
+		if err != nil{
+			fmt.Println(err)
+		}
+		err = mClient.SendMessage(dropedContainers, "")
+		if err != nil{
+			fmt.Println(err)
+		}
 	}
 }
 
 // Создает клиента для работы с меттермостом, логинит пользователя
-func MattermostStart() mattermost.MattermostClient{
-	mClient := mattermost.NewMattermostClient()
+func MattermostStart(ldb database.LevelDB) mattermost.MattermostClient{
+	mClient := mattermost.NewMattermostClient(ldb)
 	mClient.CreateClient("http://192.168.88.62:8065")
 	err := mClient.Login("qwerty@gmail.com", "qwerty")
 	if err != nil{

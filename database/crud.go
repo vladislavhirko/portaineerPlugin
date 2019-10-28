@@ -1,8 +1,6 @@
 package database
 
-import (
-	"fmt"
-	"github.com/syndtr/goleveldb/leveldb"
+import ("github.com/syndtr/goleveldb/leveldb"
 	)
 
 type LevelDB struct{
@@ -16,20 +14,16 @@ func NewLevelDB() LevelDB{
 }
 
 //Открывает соединение с базой данных
-func (ldb *LevelDB) Open(){
+func (ldb *LevelDB) Open() error{
 	var err error
 	ldb.DB, err = leveldb.OpenFile("storage/storage", nil)
-	if err != nil{
-		fmt.Println(err)
-	}
+	return err
 }
 
 //Добавляет или обновляет жлемент в базе данных
-func (ldb *LevelDB) Put(key, value string){
+func (ldb *LevelDB) Put(key, value string) error{
 	err := ldb.DB.Put([]byte(key), []byte(value), nil)
-	if err != nil{
-		fmt.Println(err)
-	}
+	return err
 }
 
 //Получаем все значения  с базы данных
@@ -43,4 +37,15 @@ func (ldb *LevelDB) GetAll() (map[string]string){
 	return data
 }
 
-//TODO сделать метод удаления элдементов с базы данных
+func (ldb *LevelDB) Get(key string) (string, error){
+	value, err := ldb.DB.Get([]byte(key), nil)
+	if err != nil{
+		return "", err
+	}
+	return string(value), nil
+}
+
+func (ldb *LevelDB) Delete(key string) error{
+	err := ldb.DB.Delete([]byte(key), nil)
+	return err
+}
