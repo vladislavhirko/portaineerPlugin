@@ -45,6 +45,7 @@ func (ldb *LevelDB) GetAll() map[string]string {
 	return data
 }
 
+// Возвращает валуе по ключу
 func (ldb *LevelDB) Get(key string) (string, error) {
 	value, err := ldb.DB.Get([]byte(key), nil)
 	if err != nil {
@@ -53,6 +54,7 @@ func (ldb *LevelDB) Get(key string) (string, error) {
 	return string(value), nil
 }
 
+// удаляет запись по ключу
 func (ldb *LevelDB) Delete(key string) error {
 	err := ldb.DB.Delete([]byte(key), nil)
 	return err

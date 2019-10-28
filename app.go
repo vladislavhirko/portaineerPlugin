@@ -22,17 +22,18 @@ func main() {
 }
 
 func Starter(config config.Config) {
-	wg.Add(3)
+	wg.Add(2)
 	levelDB := LDBStart(config.LevelDB)
 	mClient := MattermostStart(levelDB, config.MClient)
 	pClient := PortainerStart(config.PClient)
 
 	go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
 	go DockerChecker(pClient)
-	go rest.RunServer(levelDB, wg) //В будущем тут будет рест
+	go rest.StartServer(levelDB, config.API) //В будущем тут будет рест
 	wg.Wait()
 }
 
+//Функция для открытыя соедниенения с левелдб
 func LDBStart(config config.Level) database.LevelDB {
 	ldb, err := database.NewLevelDB(config.Path)
 	if err != nil {
@@ -41,6 +42,7 @@ func LDBStart(config config.Level) database.LevelDB {
 	return *ldb
 }
 
+//Начало работы с потейнером
 func PortainerStart(config config.Portainer) portainer.ClientPortaineer {
 	pClient := portainer.NewPorteinerClient(config.Address, config.Port, config.CheckInterval)
 	err := pClient.Auth(config.Login, config.Password)

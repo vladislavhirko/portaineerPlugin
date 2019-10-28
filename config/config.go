@@ -6,9 +6,14 @@ import (
 )
 
 type Config struct {
+	API API `toml:"api"`
 	LevelDB Level      `toml:"level"`
 	MClient Mattermost `toml:"mattermost"`
 	PClient Portainer  `toml:"portainer"`
+}
+
+type API struct{
+	Port string `toml:"port"`
 }
 
 type Level struct {
@@ -32,6 +37,7 @@ type Portainer struct {
 
 func GetConfig() Config {
 	config := Config{
+		API: *new(API),
 		LevelDB: *new(Level),
 		MClient: *new(Mattermost),
 		PClient: *new(Portainer),
