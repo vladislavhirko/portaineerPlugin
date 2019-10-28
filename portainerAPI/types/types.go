@@ -9,5 +9,5 @@ type Containeer struct {
 	Image  string
 	State  string
 	Status string
-	Logs string
+	Logs   string
 }

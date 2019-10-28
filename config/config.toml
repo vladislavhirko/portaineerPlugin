@@ -1,0 +1,15 @@
+[mattermost]
+    email = "qwerty@gmail.com"
+    password = "qwerty"
+    address = "192.168.88.62"
+    port = "8065"
+
+[portainer]
+    email = "admin"
+    password = "adminadmin"
+    address = "localhost"
+    port = "9000"
+    check_interval = "5"
+
+[level]
+    path = "storage/storage"
