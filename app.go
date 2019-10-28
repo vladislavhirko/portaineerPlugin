@@ -5,8 +5,8 @@ import (
 	"github.com/vladislavhirko/portaineerPlugin/config"
 	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/mattermost"
-	"github.com/vladislavhirko/portaineerPlugin/portainerAPI"
-	"github.com/vladislavhirko/portaineerPlugin/portainerAPI/types"
+	"github.com/vladislavhirko/portaineerPlugin/portainer"
+	"github.com/vladislavhirko/portaineerPlugin/portainer/types"
 	"github.com/vladislavhirko/portaineerPlugin/rest"
 	"log"
 	"sync"
@@ -41,9 +41,9 @@ func LDBStart(config config.Level) database.LevelDB {
 	return *ldb
 }
 
-func PortainerStart(config config.Portainer) portainerAPI.ClientPortaineer {
-	pClient := portainerAPI.NewPorteinerClient(config.Address, config.Port)
-	err := pClient.Auth(config.Email, config.Password)
+func PortainerStart(config config.Portainer) portainer.ClientPortaineer {
+	pClient := portainer.NewPorteinerClient(config.Address, config.Port, config.CheckInterval)
+	err := pClient.Auth(config.Login, config.Password)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,14 +64,14 @@ func MattermostStart(ldb database.LevelDB, config config.Mattermost) mattermost.
 // тянут список контейнеров, далее ищет те которые упали
 // далее добавялют в список упавших, создает новый список в котором они хранятся (список упавших после этого чистится)
 // затем отправляет по каналу в функию Sender()
-func DockerChecker(pClient portainerAPI.ClientPortaineer) {
+func DockerChecker(pClient portainer.ClientPortaineer) {
 	defer wg.Done()
 	for {
 		err := pClient.GetContainerrList()
 		if err != nil {
 			log.Fatal(err)
 		}
-		pClient.StopedTrigger()
+		pClient.FinedDropedContainers()
 		dropedContainers := types.Containers{}
 		if len(pClient.StopedContainers) != 0 {
 			dropedContainers, err = pClient.GetDropedContainer()
@@ -83,7 +83,7 @@ func DockerChecker(pClient portainerAPI.ClientPortaineer) {
 		if len(dropedContainers) > 0 {
 			stopedContainerChan <- dropedContainers
 		}
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * pClient.CheckInterval)
 	}
 }
 

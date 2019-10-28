@@ -1,12 +1,15 @@
-package portainerAPI
+package portainer
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/vladislavhirko/portaineerPlugin/portainerAPI/types"
+	"github.com/vladislavhirko/portaineerPlugin/portainer/types"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 //Структура клиента для портейнера
@@ -16,19 +19,26 @@ type ClientPortaineer struct {
 	Password          string
 	Address           string
 	Port              string
+	CheckInterval 	  time.Duration
 	CurrentContainers types.Containers
 	LastContainers    types.Containers
 	StopedContainers  types.Containers
 }
 
 //Создание нового клиента портейнера, выделяет память для слайсов контейнеров
-func NewPorteinerClient(address, port string) ClientPortaineer {
+func NewPorteinerClient(address, port, checkInterval string) ClientPortaineer {
+	checkIntervalInt, err := strconv.Atoi(checkInterval)
+	if err != nil{
+		log.Fatal(err)
+	}
+	checkIntervalDuration := time.Duration(checkIntervalInt)
 	return ClientPortaineer{
 		Jwt:               "",
 		Username:          "",
 		Password:          "",
 		Address:           address,
 		Port:              port,
+		CheckInterval: 	   checkIntervalDuration,
 		CurrentContainers: make(types.Containers, 0),
 		LastContainers:    make(types.Containers, 0),
 		StopedContainers:  make(types.Containers, 0),
@@ -99,8 +109,7 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 // так как тут хранятся все контейнера и стопнутые тоже, сравнивает на то разные ли они? и если разные то проверяет на то какой сейчас статус
 // если exited то добавляет в список упавших
 //TODO заменить два слайса на 2 мапы
-// TODO изменить название функции
-func (pClient *ClientPortaineer) StopedTrigger() {
+func (pClient *ClientPortaineer) FinedDropedContainers() {
 	for _, lastContainer := range pClient.LastContainers {
 		for _, currentContainer := range pClient.CurrentContainers {
 			if lastContainer.Names == currentContainer.Names &&

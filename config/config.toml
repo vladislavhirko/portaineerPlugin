@@ -5,11 +5,11 @@
     port = "8065"
 
 [portainer]
-    email = "admin"
+    login = "admin"
     password = "adminadmin"
     address = "localhost"
     port = "9000"
-    check_interval = "5"
+    check_interval = "3"
 
 [level]
     path = "storage/storage"

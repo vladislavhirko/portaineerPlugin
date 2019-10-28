@@ -23,7 +23,7 @@ type Mattermost struct {
 }
 
 type Portainer struct {
-	Email         string `toml:"email"`
+	Login         string `toml:"login"`
 	Password      string `toml:"password"`
 	Address       string `toml:"address"`
 	Port          string `toml:"port"`

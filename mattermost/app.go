@@ -5,7 +5,7 @@ import (
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/mattermost/types"
-	pTypes "github.com/vladislavhirko/portaineerPlugin/portainerAPI/types"
+	pTypes "github.com/vladislavhirko/portaineerPlugin/portainer/types"
 	"log"
 )
 
@@ -60,6 +60,7 @@ func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patte
 			log.Println("No chanel for ", container)
 			continue
 		}
+
 		for _, chanel := range mClient.Chanels {
 			if chanelName == chanel.Name {
 				post := &model.Post{}
