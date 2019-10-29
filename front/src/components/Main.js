@@ -8,7 +8,7 @@ function Jopa(){
     var first = "";
     var second = "";
 
-    const putData = (e) =>{
+    const printToConsole = (e) =>{
         e.preventDefault();
         first = container;
         second = chanel;
@@ -30,8 +30,8 @@ function Jopa(){
                 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
             </head>
             <body>
-                <h2>First value - {container}</h2>
-                <h2>Second value - {chanel}</h2>
+                <h2>Container - {container}</h2>
+                <h2>Chanel - {chanel}</h2>
                 <div>
                     <form>
                         <div className="row">
@@ -42,8 +42,8 @@ function Jopa(){
                                     name="docker-container-name" 
                                     className="form-control" 
                                     id="docker-container-name" 
-                                    value={chanel} 
-                                    onChange={e => setChanel(e.target.value)}
+                                    value={container} 
+                                    onChange={e => setContainer(e.target.value)}
                                     placeholder="Container name" />
                                 </div>
                             </div>
@@ -54,15 +54,15 @@ function Jopa(){
                                     name="chanel-name" 
                                     className="form-control" 
                                     id="chanel-name" 
-                                    value={container} 
-                                    onChange={e => setContainer(e.target.value)}
+                                    value={chanel} 
+                                    onChange={e => setChanel(e.target.value)}
                                     placeholder="Cnanel name" />
                                 </div>
                             </div>
                         </div>
                         <div className="row">
                             <div className="col">
-                                <button className="btn btn-light btn-block button-border" onClick={putData}>ADD</button>
+                                <button className="btn btn-light btn-block button-border" onClick={printToConsole}>ADD</button>
                             </div>
                         </div>
                     </form>

@@ -35,5 +35,6 @@ form{
   width: 700px;
   margin: auto;
   margin-top: 75px;
-  border: 1px solid black;
+  border-radius: 5px;
+  border: 2px solid rgb(177, 177, 177);
 }
