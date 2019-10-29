@@ -26,10 +26,11 @@ func Starter(config config.Config) {
 	levelDB := LDBStart(config.LevelDB)
 	mClient := MattermostStart(levelDB, config.MClient)
 	pClient := PortainerStart(config.PClient)
+	server := rest.NewServer(config.API, levelDB, pClient)
 
 	go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
 	go DockerChecker(pClient)
-	go rest.StartServer(levelDB, config.API) //В будущем тут будет рест
+	go server.StartServer() //В будущем тут будет рест
 	wg.Wait()
 }
 
@@ -43,7 +44,7 @@ func LDBStart(config config.Level) database.LevelDB {
 }
 
 //Начало работы с потейнером
-func PortainerStart(config config.Portainer) portainer.ClientPortaineer {
+func PortainerStart(config config.Portainer) *portainer.ClientPortaineer {
 	pClient := portainer.NewPorteinerClient(config.Address, config.Port, config.CheckInterval)
 	err := pClient.Auth(config.Login, config.Password)
 	if err != nil {
@@ -66,7 +67,7 @@ func MattermostStart(ldb database.LevelDB, config config.Mattermost) mattermost.
 // тянут список контейнеров, далее ищет те которые упали
 // далее добавялют в список упавших, создает новый список в котором они хранятся (список упавших после этого чистится)
 // затем отправляет по каналу в функию Sender()
-func DockerChecker(pClient portainer.ClientPortaineer) {
+func DockerChecker(pClient *portainer.ClientPortaineer) {
 	defer wg.Done()
 	for {
 		err := pClient.GetContainerrList()

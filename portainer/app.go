@@ -26,13 +26,13 @@ type ClientPortaineer struct {
 }
 
 //Создание нового клиента портейнера, выделяет память для слайсов контейнеров
-func NewPorteinerClient(address, port, checkInterval string) ClientPortaineer {
+func NewPorteinerClient(address, port, checkInterval string) *ClientPortaineer {
 	checkIntervalInt, err := strconv.Atoi(checkInterval)
 	if err != nil{
 		log.Fatal(err)
 	}
 	checkIntervalDuration := time.Duration(checkIntervalInt)
-	return ClientPortaineer{
+	return &ClientPortaineer{
 		Jwt:               "",
 		Username:          "",
 		Password:          "",
@@ -133,12 +133,11 @@ func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) 
 	return stopedWithError, nil
 }
 
-//TODO: сделать так что б функция работала
 func (pClient *ClientPortaineer) GetDropedLogs() error {
 	for _, stopedContainer := range pClient.StopedContainers {
 		client := &http.Client{}
 		req, err := http.NewRequest(
-			"GET", "http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+stopedContainer.Id[:12]+"/logs?tail=10&", nil,
+			"GET", "http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+stopedContainer.Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail=5", nil,
 		)
 		if err != nil {
 			return err

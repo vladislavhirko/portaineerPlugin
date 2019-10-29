@@ -5,22 +5,38 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/vladislavhirko/portaineerPlugin/config"
 	"github.com/vladislavhirko/portaineerPlugin/database"
+	"github.com/vladislavhirko/portaineerPlugin/portainer"
 	"github.com/vladislavhirko/portaineerPlugin/rest/types"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-func StartServer(ldb database.LevelDB, api config.API){
+type Server struct{
+	Config config.API
+	LDB database.LevelDB
+	pClient *portainer.ClientPortaineer
+}
+
+func NewServer(config config.API, ldb database.LevelDB, pClient *portainer.ClientPortaineer) Server{
+	return Server{
+		Config:  config,
+		LDB:     ldb,
+		pClient: pClient,
+	}
+}
+
+func (server Server) StartServer(){
 	r := mux.NewRouter()
-	r.HandleFunc("/pairs", AddPairHandler(ldb)).Methods("POST")
-	r.HandleFunc("/pairs", GetPairsHandler(ldb)).Methods("GET")
+	r.HandleFunc("/pairs", server.AddPairHandler()).Methods("POST")
+	r.HandleFunc("/pairs", server.GetPairsHandler()).Methods("GET")
+	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":" + api.Port, nil))
+	log.Fatal(http.ListenAndServe(":" + server.Config.Port, nil))
 }
 
 // Добавляет в базу данных новый ключ-значение
-func AddPairHandler(ldb database.LevelDB) func(w http.ResponseWriter, r *http.Request){
+func (server Server) AddPairHandler() func(w http.ResponseWriter, r *http.Request){
 	return func (w http.ResponseWriter, r *http.Request){
 		kv := types.KeyValue{}
 		body, err := ioutil.ReadAll(r.Body)
@@ -31,7 +47,7 @@ func AddPairHandler(ldb database.LevelDB) func(w http.ResponseWriter, r *http.Re
 		if err != nil{
 			http.Error(w, "uncorrect json format", 400)
 		}
-		err = ldb.Put(kv.Key, kv.Value)
+		err = server.LDB.Put(kv.Key, kv.Value)
 		if err != nil{
 			http.Error(w, "some troubles with database", 400)
 		}
@@ -39,10 +55,17 @@ func AddPairHandler(ldb database.LevelDB) func(w http.ResponseWriter, r *http.Re
 	}
 }
 
+func (server Server) GetContainersHandler() func(w http.ResponseWriter, r *http.Request) {
+	return func (w http.ResponseWriter, r * http.Request){
+		containersJSON, _ := json.Marshal(server.pClient.CurrentContainers)
+		w.Write(containersJSON)
+	}
+}
+
 //возвращает список ключ-значение (контейнер - чат)
-func GetPairsHandler(ldb database.LevelDB) func(w http.ResponseWriter, r *http.Request){
+func (server Server) GetPairsHandler() func(w http.ResponseWriter, r *http.Request){
 	return func (w http.ResponseWriter, r *http.Request) {
-		pairs := ldb.GetAll()
+		pairs := server.LDB.GetAll()
 		pairsJSON, _ := json.Marshal(pairs)
 		w.Write(pairsJSON)
 	}
