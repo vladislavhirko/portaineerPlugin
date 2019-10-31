@@ -7,6 +7,7 @@ import (
 	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/portainer"
 	"github.com/vladislavhirko/portaineerPlugin/rest/types"
+	"github.com/gorilla/handlers"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -27,12 +28,23 @@ func NewServer(config config.API, ldb database.LevelDB, pClient *portainer.Clien
 }
 
 func (server Server) StartServer(){
+
+	headersOk := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
 	r := mux.NewRouter()
 	r.HandleFunc("/pairs", server.AddPairHandler()).Methods("POST")
 	r.HandleFunc("/pairs", server.GetPairsHandler()).Methods("GET")
 	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
 	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe(":" + server.Config.Port, nil))
+	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
+}
+
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 // Добавляет в базу данных новый ключ-значение

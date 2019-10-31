@@ -24,11 +24,11 @@ func main() {
 func Starter(config config.Config) {
 	wg.Add(2)
 	levelDB := LDBStart(config.LevelDB)
-	mClient := MattermostStart(levelDB, config.MClient)
+	//mClient := MattermostStart(levelDB, config.MClient)
 	pClient := PortainerStart(config.PClient)
 	server := rest.NewServer(config.API, levelDB, pClient)
 
-	go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
+	//go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
 	go DockerChecker(pClient)
 	go server.StartServer() //В будущем тут будет рест
 	wg.Wait()
