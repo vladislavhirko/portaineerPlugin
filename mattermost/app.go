@@ -60,16 +60,16 @@ func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patte
 			log.Println("No chanel for ", container)
 			continue
 		}
-
 		for _, chanel := range mClient.Chanels {
 			if chanelName == chanel.Name {
 				post := &model.Post{}
 				post.ChannelId = chanel.ID
-				post.Message = "Fault: " + container.Names[0]
+				post.Message = "Fault: " + container.Names[0] + "\n" + container.Logs
 				_, resp := mClient.Client.CreatePost(post)
 				if resp.Error != nil {
 					return resp.Error
 				}
+
 			}
 		}
 	}

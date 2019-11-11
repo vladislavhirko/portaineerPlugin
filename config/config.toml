@@ -6,7 +6,7 @@
     password = "qwerty"
 
     #Address and port which will used in https request to mattermost
-    address = "192.168.88.62"
+    address = "localhost"
     port = "8065"
 
 #Configuration for portainer
@@ -18,16 +18,19 @@
 
     #Address and port which will used in https request to portainer
     address = "localhost"
-    port = "9000"
+    port = "1122"
 
     #Time in seconds wich mean how often pragram will check fallen containers
     check_interval = "3"
+
+    #Amount of logs which will send to mattermost
+    logs_amount = "100"
 
 #Configuration for LevelDB
 [level]
 
     #Path to level db
-    path = "storage/storage"
+    path = "$HOME/.portaineerPlugin/storage/storage"
 
 #Configuration for server
 [api]

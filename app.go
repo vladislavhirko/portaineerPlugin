@@ -17,18 +17,21 @@ var stopedContainerChan = make(chan types.Containers) //Канал по кото
 var wg = sync.WaitGroup{}
 
 func main() {
-	systemConfig := config.GetConfig()
-	Starter(systemConfig)
+	systemConfig, err := config.GetConfig()
+	if err != nil{
+		log.Fatal(err)
+	}
+	Starter(*systemConfig)
 }
 
 func Starter(config config.Config) {
 	wg.Add(2)
 	levelDB := LDBStart(config.LevelDB)
-	//mClient := MattermostStart(levelDB, config.MClient)
+	mClient := MattermostStart(levelDB, config.MClient)
 	pClient := PortainerStart(config.PClient)
 	server := rest.NewServer(config.API, levelDB, pClient)
 
-	//go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
+	go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
 	go DockerChecker(pClient)
 	go server.StartServer() //В будущем тут будет рест
 	wg.Wait()
@@ -45,7 +48,7 @@ func LDBStart(config config.Level) database.LevelDB {
 
 //Начало работы с потейнером
 func PortainerStart(config config.Portainer) *portainer.ClientPortaineer {
-	pClient := portainer.NewPorteinerClient(config.Address, config.Port, config.CheckInterval)
+	pClient := portainer.NewPorteinerClient(config.Address, config.Port, config.CheckInterval, config.LogsAmount)
 	err := pClient.Auth(config.Login, config.Password)
 	if err != nil {
 		log.Fatal(err)

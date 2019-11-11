@@ -28,23 +28,17 @@ func NewServer(config config.API, ldb database.LevelDB, pClient *portainer.Clien
 }
 
 func (server Server) StartServer(){
-
 	headersOk := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	r := mux.NewRouter()
 	r.HandleFunc("/pairs", server.AddPairHandler()).Methods("POST")
+	r.HandleFunc("/pairs", server.DeletePairHandler()).Methods("DELETE")
 	r.HandleFunc("/pairs", server.GetPairsHandler()).Methods("GET")
 	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
-}
-
-func setupResponse(w *http.ResponseWriter, req *http.Request) {
-	(*w).Header().Set("Access-Control-Allow-Origin", "*")
-	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 }
 
 // Добавляет в базу данных новый ключ-значение
@@ -69,6 +63,10 @@ func (server Server) AddPairHandler() func(w http.ResponseWriter, r *http.Reques
 
 func (server Server) GetContainersHandler() func(w http.ResponseWriter, r *http.Request) {
 	return func (w http.ResponseWriter, r * http.Request){
+		err := server.LDB.Put("/crazy_volhard", "crazy")
+		if err != nil{
+			http.Error(w, err.Error(), 400)
+		}
 		containersJSON, _ := json.Marshal(server.pClient.CurrentContainers)
 		w.Write(containersJSON)
 	}
@@ -80,5 +78,18 @@ func (server Server) GetPairsHandler() func(w http.ResponseWriter, r *http.Reque
 		pairs := server.LDB.GetAll()
 		pairsJSON, _ := json.Marshal(pairs)
 		w.Write(pairsJSON)
+	}
+}
+
+func (server Server) DeletePairHandler() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil{
+			http.Error(w, err.Error(), 400)
+		}
+		err = server.LDB.Delete(string(body))
+		if err != nil{
+			http.Error(w, err.Error(), 400)
+		}
 	}
 }

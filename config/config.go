@@ -1,8 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"github.com/BurntSushi/toml"
+	"os"
+	"os/user"
 )
 
 type Config struct {
@@ -33,18 +34,34 @@ type Portainer struct {
 	Address       string `toml:"address"`
 	Port          string `toml:"port"`
 	CheckInterval string `toml:"check_interval"`
+	LogsAmount string `toml:"logs_amount"`
 }
 
-func GetConfig() Config {
+func GetConfig() (*Config, error) {
+	err := CreateEnvironment()
 	config := Config{
 		API: *new(API),
 		LevelDB: *new(Level),
 		MClient: *new(Mattermost),
 		PClient: *new(Portainer),
 	}
-	_, err := toml.DecodeFile("config/config.toml", &config)
+	usr, _ := user.Current()
+	_, err = toml.DecodeFile(usr.HomeDir + "/.portaineerPlugin/config.toml", &config)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	return config
+	return &config, nil
+}
+
+//Fuction which will create folder with config and storage
+func CreateEnvironment() error{
+	usr, _ := user.Current()
+	_, err := os.Stat(usr.HomeDir + "/.portaineerPlugin1")
+	if os.IsNotExist(err){
+		err := os.Mkdir(usr.HomeDir + "/.portaineerPlugin1", 0777)
+		if err != nil{
+			return err
+		}
+	}
+	return nil
 }

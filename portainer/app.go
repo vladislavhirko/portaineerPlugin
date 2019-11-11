@@ -23,10 +23,11 @@ type ClientPortaineer struct {
 	CurrentContainers types.Containers
 	LastContainers    types.Containers
 	StopedContainers  types.Containers
+	LogsAmount string
 }
 
 //Создание нового клиента портейнера, выделяет память для слайсов контейнеров
-func NewPorteinerClient(address, port, checkInterval string) *ClientPortaineer {
+func NewPorteinerClient(address, port, checkInterval string, logsAmount string) *ClientPortaineer {
 	checkIntervalInt, err := strconv.Atoi(checkInterval)
 	if err != nil{
 		log.Fatal(err)
@@ -42,6 +43,7 @@ func NewPorteinerClient(address, port, checkInterval string) *ClientPortaineer {
 		CurrentContainers: make(types.Containers, 0),
 		LastContainers:    make(types.Containers, 0),
 		StopedContainers:  make(types.Containers, 0),
+		LogsAmount: logsAmount,
 	}
 }
 
@@ -125,7 +127,10 @@ func (pClient *ClientPortaineer) FinedDropedContainers() {
 // Создает список упавших контейнеров которые не восстановились
 func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) {
 	stopedWithError := make(types.Containers, 0)
-	pClient.GetDropedLogs() //в будущем тут будут доставаться логи упавших контейнеров
+	err := pClient.GetDropedLogs() //в будущем тут будут доставаться логи упавших контейнеров
+	if err != nil{
+		return nil, err
+	}
 	for _, stopedContainer := range pClient.StopedContainers {
 		stopedWithError = append(stopedWithError, stopedContainer)
 	}
@@ -134,10 +139,10 @@ func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) 
 }
 
 func (pClient *ClientPortaineer) GetDropedLogs() error {
-	for _, stopedContainer := range pClient.StopedContainers {
+	for i := 0; i < len(pClient.StopedContainers); i++{
 		client := &http.Client{}
 		req, err := http.NewRequest(
-			"GET", "http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+stopedContainer.Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail=5", nil,
+			"GET", "http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+pClient.StopedContainers[i].Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail=" + pClient.LogsAmount, nil,
 		)
 		if err != nil {
 			return err
@@ -148,7 +153,9 @@ func (pClient *ClientPortaineer) GetDropedLogs() error {
 			return err
 		}
 		body, err := ioutil.ReadAll(resp.Body)
-		fmt.Println(string(body))
+		//fmt.Println(string(body))
+		pClient.StopedContainers[i].Logs = string(body)
 	}
 	return nil
 }
+

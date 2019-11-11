@@ -4,6 +4,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+//Contains key-pair value
+//Also contains container - chat (kv)
 type LevelDB struct {
 	Path string
 	DB   *leveldb.DB
