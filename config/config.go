@@ -2,8 +2,6 @@ package config
 
 import (
 	"github.com/BurntSushi/toml"
-	"os"
-	"os/user"
 )
 
 type Config struct {
@@ -37,16 +35,17 @@ type Portainer struct {
 	LogsAmount string `toml:"logs_amount"`
 }
 
-func GetConfig() (*Config, error) {
-	err := CreateEnvironment()
+
+func GetConfig(path string) (*Config, error) {
+	//fmt.Println(path)
+	//err := CreateEnvironment()
 	config := Config{
 		API: *new(API),
 		LevelDB: *new(Level),
 		MClient: *new(Mattermost),
 		PClient: *new(Portainer),
 	}
-	usr, _ := user.Current()
-	_, err = toml.DecodeFile(usr.HomeDir + "/.portaineerPlugin/config.toml", &config)
+	_, err := toml.DecodeFile(path, &config)
 	if err != nil {
 		return nil, err
 	}
@@ -54,14 +53,14 @@ func GetConfig() (*Config, error) {
 }
 
 //Fuction which will create folder with config and storage
-func CreateEnvironment() error{
-	usr, _ := user.Current()
-	_, err := os.Stat(usr.HomeDir + "/.portaineerPlugin1")
-	if os.IsNotExist(err){
-		err := os.Mkdir(usr.HomeDir + "/.portaineerPlugin1", 0777)
-		if err != nil{
-			return err
-		}
-	}
-	return nil
-}
+//func CreateEnvironment() error{
+//	usr, _ := user.Current()
+//	_, err := os.Stat(usr.HomeDir + "/.portaineerPlugin1")
+//	if os.IsNotExist(err){
+//		err := os.Mkdir(usr.HomeDir + "/.portaineerPlugin1", 0777)
+//		if err != nil{
+//			return err
+//		}
+//	}
+//	return nil
+//}

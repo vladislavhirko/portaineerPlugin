@@ -2,12 +2,12 @@ package rest
 
 import (
 	"encoding/json"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/vladislavhirko/portaineerPlugin/config"
 	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/portainer"
 	"github.com/vladislavhirko/portaineerPlugin/rest/types"
-	"github.com/gorilla/handlers"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -37,6 +37,7 @@ func (server Server) StartServer(){
 	r.HandleFunc("/pairs", server.DeletePairHandler()).Methods("DELETE")
 	r.HandleFunc("/pairs", server.GetPairsHandler()).Methods("GET")
 	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
+	r.HandleFunc("/get_token", GetTokenHandler).Methods("GET")
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
@@ -91,5 +92,10 @@ func (server Server) DeletePairHandler() func(w http.ResponseWriter, r *http.Req
 		if err != nil{
 			http.Error(w, err.Error(), 400)
 		}
+		w.Write([]byte("OK"))
 	}
 }
+
+
+//-----------------------------------------------------------//
+

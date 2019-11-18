@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/vladislavhirko/portaineerPlugin/config"
 	"github.com/vladislavhirko/portaineerPlugin/database"
@@ -9,6 +10,7 @@ import (
 	"github.com/vladislavhirko/portaineerPlugin/portainer/types"
 	"github.com/vladislavhirko/portaineerPlugin/rest"
 	"log"
+	"os/user"
 	"sync"
 	"time"
 )
@@ -17,8 +19,11 @@ var stopedContainerChan = make(chan types.Containers) //Канал по кото
 var wg = sync.WaitGroup{}
 
 func main() {
-	systemConfig, err := config.GetConfig()
-	if err != nil{
+	usr, _ := user.Current()
+	configPath := flag.String("config_path", usr.HomeDir + "/.portaineerPlugin/config.toml", "Path to file config")
+	flag.Parse()
+	systemConfig, err := config.GetConfig(*configPath)
+	if err != nil {
 		log.Fatal(err)
 	}
 	Starter(*systemConfig)

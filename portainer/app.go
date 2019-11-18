@@ -19,17 +19,17 @@ type ClientPortaineer struct {
 	Password          string
 	Address           string
 	Port              string
-	CheckInterval 	  time.Duration
+	CheckInterval     time.Duration
 	CurrentContainers types.Containers
 	LastContainers    types.Containers
 	StopedContainers  types.Containers
-	LogsAmount string
+	LogsAmount        string
 }
 
 //Создание нового клиента портейнера, выделяет память для слайсов контейнеров
 func NewPorteinerClient(address, port, checkInterval string, logsAmount string) *ClientPortaineer {
 	checkIntervalInt, err := strconv.Atoi(checkInterval)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 	checkIntervalDuration := time.Duration(checkIntervalInt)
@@ -39,11 +39,11 @@ func NewPorteinerClient(address, port, checkInterval string, logsAmount string) 
 		Password:          "",
 		Address:           address,
 		Port:              port,
-		CheckInterval: 	   checkIntervalDuration,
+		CheckInterval:     checkIntervalDuration,
 		CurrentContainers: make(types.Containers, 0),
 		LastContainers:    make(types.Containers, 0),
 		StopedContainers:  make(types.Containers, 0),
-		LogsAmount: logsAmount,
+		LogsAmount:        logsAmount,
 	}
 }
 
@@ -128,7 +128,7 @@ func (pClient *ClientPortaineer) FinedDropedContainers() {
 func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) {
 	stopedWithError := make(types.Containers, 0)
 	err := pClient.GetDropedLogs() //в будущем тут будут доставаться логи упавших контейнеров
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	for _, stopedContainer := range pClient.StopedContainers {
@@ -139,10 +139,13 @@ func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) 
 }
 
 func (pClient *ClientPortaineer) GetDropedLogs() error {
-	for i := 0; i < len(pClient.StopedContainers); i++{
+	for i := 0; i < len(pClient.StopedContainers); i++ {
 		client := &http.Client{}
 		req, err := http.NewRequest(
-			"GET", "http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+pClient.StopedContainers[i].Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail=" + pClient.LogsAmount, nil,
+			"GET",
+			"http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+
+				pClient.StopedContainers[i].Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail="+pClient.LogsAmount,
+			nil,
 		)
 		if err != nil {
 			return err
@@ -158,4 +161,3 @@ func (pClient *ClientPortaineer) GetDropedLogs() error {
 	}
 	return nil
 }
-

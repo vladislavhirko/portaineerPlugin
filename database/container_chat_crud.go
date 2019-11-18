@@ -2,6 +2,7 @@ package database
 
 import (
 	"github.com/syndtr/goleveldb/leveldb"
+	"log"
 )
 
 //Contains key-pair value
@@ -33,6 +34,7 @@ func (ldb *LevelDB) Open() error {
 //Добавляет или обновляет жлемент в базе данных
 func (ldb *LevelDB) Put(key, value string) error {
 	err := ldb.DB.Put([]byte(key), []byte(value), nil)
+	log.Println("\nContainer: ", key, "\nChat: ", value)
 	return err
 }
 

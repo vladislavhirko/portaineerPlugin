@@ -64,12 +64,11 @@ func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patte
 			if chanelName == chanel.Name {
 				post := &model.Post{}
 				post.ChannelId = chanel.ID
-				post.Message = "Fault: " + container.Names[0] + "\n" + container.Logs
+				post.Message = "Fault: **_" + container.Names[0] + "_**\n```" + container.Logs[:len(container.Logs) - 1] + "```"
 				_, resp := mClient.Client.CreatePost(post)
 				if resp.Error != nil {
 					return resp.Error
 				}
-
 			}
 		}
 	}
