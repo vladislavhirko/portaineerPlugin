@@ -55,7 +55,7 @@ func (mClient *MattermostClient) GetallChanels() error {
 func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patternChanel string) error {
 	// Листает список всех каналов и когда находит тот который в бд, отправляет туда
 	for _, container := range containers {
-		chanelName, err := mClient.DB.Get(container.Names[0])
+		chanelName, err := mClient.DB.DBContainerChat.Get(container.Names[0])
 		if err != nil {
 			log.Println("No chanel for ", container)
 			continue

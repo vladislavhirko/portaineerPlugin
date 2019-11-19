@@ -48,7 +48,9 @@ func (server Server) StartServer(){
 	r.HandleFunc("/pairs", Log(jwtMiddleware.Handler(server.AddPairHandler())).ServeHTTP).Methods("POST")
 	r.HandleFunc("/pairs", Log(jwtMiddleware.Handler(server.DeletePairHandler())).ServeHTTP).Methods("DELETE")
 	r.HandleFunc("/pairs", Log(jwtMiddleware.Handler(server.GetPairsHandler())).ServeHTTP).Methods("GET")
-	r.HandleFunc("/containers", Log(jwtMiddleware.Handler(server.GetContainersHandler())).ServeHTTP).Methods("GET")
+	//r.HandleFunc("/containers", Log(jwtMiddleware.Handler(server.GetContainersHandler())).ServeHTTP).Methods("GET")
+	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
+
 	r.HandleFunc("/get_token", Log(http.HandlerFunc(GetTokenHandler)).ServeHTTP).Methods("GET")
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
@@ -66,7 +68,7 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 		if err != nil{
 			http.Error(w, "uncorrect json format", 400)
 		}
-		err = server.LDB.Put(kv.Key, kv.Value)
+		err = server.LDB.DBContainerChat.Put(kv.Key, kv.Value)
 		if err != nil{
 			http.Error(w, "some troubles with database", 400)
 		}
@@ -77,7 +79,7 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 func (server Server) GetContainersHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r * http.Request){
 		fmt.Println(r.Header)
-		err := server.LDB.Put("/crazy_volhard", "crazy")
+		err := server.LDB.DBContainerChat.Put("/crazy_volhard", "crazy")
 		if err != nil{
 			http.Error(w, err.Error(), 400)
 		}
@@ -89,7 +91,7 @@ func (server Server) GetContainersHandler() http.HandlerFunc {
 //возвращает список ключ-значение (контейнер - чат)
 func (server Server) GetPairsHandler() http.HandlerFunc{
 	return func (w http.ResponseWriter, r *http.Request) {
-		pairs := server.LDB.GetAll()
+		pairs := server.LDB.DBContainerChat.GetAll()
 		pairsJSON, _ := json.Marshal(pairs)
 		w.Write(pairsJSON)
 	}
@@ -101,7 +103,7 @@ func (server Server) DeletePairHandler() http.HandlerFunc {
 		if err != nil{
 			http.Error(w, err.Error(), 400)
 		}
-		err = server.LDB.Delete(string(body))
+		err = server.LDB.DBContainerChat.Delete(string(body))
 		if err != nil{
 			http.Error(w, err.Error(), 400)
 		}
