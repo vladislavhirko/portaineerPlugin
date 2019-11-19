@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"time"
@@ -16,6 +17,7 @@ type MyClaims struct {
 
 //Генерит и возвращает токен клиенту
 func GetTokenHandler(w http.ResponseWriter, r *http.Request){
+	fmt.Println("hello")
 	expirationTime := time.Now().Add(168 * time.Hour)
 	// Устанавливаем набор параметров для токена
 	claims := MyClaims{
@@ -30,6 +32,14 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request){
 	tokenString, _ := token.SignedString(mySigningKey)
 	// Отдаем токен клиенту
 	w.Write([]byte(tokenString))
+}
+
+
+func TestMW(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Body, "hrgjuybjut")
+		h.ServeHTTP(w, r)
+	})
 }
 
 //func JWTMiddlewear(f func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request){

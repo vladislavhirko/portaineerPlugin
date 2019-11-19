@@ -14,9 +14,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
-
-	//"time"
 )
 
 type Server struct{
@@ -38,6 +35,8 @@ func (server Server) StartServer(){
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
+	//Function for checking token
+
 	var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			return mySigningKey, nil
@@ -50,7 +49,7 @@ func (server Server) StartServer(){
 	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.DeletePairHandler()).ServeHTTP).Methods("DELETE")
 	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.GetPairsHandler()).ServeHTTP).Methods("GET")
 	r.HandleFunc("/containers", jwtMiddleware.Handler(server.GetContainersHandler()).ServeHTTP).Methods("GET")
-	r.HandleFunc("/get_token", http.HandlerFunc(GetTokenHandler)).Methods("GET")
+	r.HandleFunc("/get_token", TestMW(http.HandlerFunc(GetTokenHandler)).ServeHTTP).Methods("GET")
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
