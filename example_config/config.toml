@@ -30,7 +30,7 @@
 [level]
 
     #Path to level db
-    path = "$HOME/.portaineerPlugin/storage/storage"
+    path = "$HOME/.portaineerPlugin/storage/"
 
 #Configuration for server
 [api]

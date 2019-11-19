@@ -1,14 +1,12 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"time"
-	//jwtmiddleware "github.com/auth0/go-jwt-middleware"
 )
 
-var mySigningKey = []byte("secret")
+var mySigningKey = []byte("das3f12A32f32a33efA3E32F32f3e2FW32f32e")
 
 type MyClaims struct {
 	Name string `json:"name"`
@@ -33,6 +31,18 @@ func GetTokenHandler(w http.ResponseWriter, r *http.Request){
 	// Отдаем токен клиенту
 	w.Write([]byte(tokenString))
 }
+
+//func JWTMiddlewear(f func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request){
+//	return func(w http.ResponseWriter, r *http.Request){
+//		jwtToken := r.Header.Get("Authentication")
+//		token, _ := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
+//			return mySigningKey, nil
+//		})
+//		if !token.Valid{
+//			http.Error(w, "", 403)
+//		}
+//	}
+//}
 
 //var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 //	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {

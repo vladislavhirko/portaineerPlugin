@@ -2,6 +2,9 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/vladislavhirko/portaineerPlugin/config"
@@ -11,6 +14,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
+
+	//"time"
 )
 
 type Server struct{
@@ -32,19 +38,27 @@ func (server Server) StartServer(){
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
+	var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			return mySigningKey, nil
+		},
+		SigningMethod: jwt.SigningMethodHS256,
+	})
+
 	r := mux.NewRouter()
-	r.HandleFunc("/pairs", server.AddPairHandler()).Methods("POST")
-	r.HandleFunc("/pairs", server.DeletePairHandler()).Methods("DELETE")
-	r.HandleFunc("/pairs", server.GetPairsHandler()).Methods("GET")
-	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
-	r.HandleFunc("/get_token", GetTokenHandler).Methods("GET")
+	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.AddPairHandler()).ServeHTTP).Methods("POST")
+	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.DeletePairHandler()).ServeHTTP).Methods("DELETE")
+	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.GetPairsHandler()).ServeHTTP).Methods("GET")
+	r.HandleFunc("/containers", jwtMiddleware.Handler(server.GetContainersHandler()).ServeHTTP).Methods("GET")
+	r.HandleFunc("/get_token", http.HandlerFunc(GetTokenHandler)).Methods("GET")
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
 
 // Добавляет в базу данных новый ключ-значение
-func (server Server) AddPairHandler() func(w http.ResponseWriter, r *http.Request){
+func (server Server) AddPairHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
+
 		kv := types.KeyValue{}
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil{
@@ -62,8 +76,9 @@ func (server Server) AddPairHandler() func(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (server Server) GetContainersHandler() func(w http.ResponseWriter, r *http.Request) {
+func (server Server) GetContainersHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r * http.Request){
+		fmt.Println(r.Header)
 		err := server.LDB.Put("/crazy_volhard", "crazy")
 		if err != nil{
 			http.Error(w, err.Error(), 400)
@@ -74,7 +89,7 @@ func (server Server) GetContainersHandler() func(w http.ResponseWriter, r *http.
 }
 
 //возвращает список ключ-значение (контейнер - чат)
-func (server Server) GetPairsHandler() func(w http.ResponseWriter, r *http.Request){
+func (server Server) GetPairsHandler() http.HandlerFunc{
 	return func (w http.ResponseWriter, r *http.Request) {
 		pairs := server.LDB.GetAll()
 		pairsJSON, _ := json.Marshal(pairs)
@@ -82,7 +97,7 @@ func (server Server) GetPairsHandler() func(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (server Server) DeletePairHandler() func(w http.ResponseWriter, r *http.Request) {
+func (server Server) DeletePairHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil{
