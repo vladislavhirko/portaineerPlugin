@@ -1,7 +1,6 @@
 package rest
 
 import (
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"net/http"
 	"time"
