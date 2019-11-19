@@ -45,11 +45,11 @@ func (server Server) StartServer(){
 	})
 
 	r := mux.NewRouter()
-	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.AddPairHandler()).ServeHTTP).Methods("POST")
-	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.DeletePairHandler()).ServeHTTP).Methods("DELETE")
-	r.HandleFunc("/pairs", jwtMiddleware.Handler(server.GetPairsHandler()).ServeHTTP).Methods("GET")
-	r.HandleFunc("/containers", jwtMiddleware.Handler(server.GetContainersHandler()).ServeHTTP).Methods("GET")
-	r.HandleFunc("/get_token", TestMW(http.HandlerFunc(GetTokenHandler)).ServeHTTP).Methods("GET")
+	r.HandleFunc("/pairs", Log(jwtMiddleware.Handler(server.AddPairHandler())).ServeHTTP).Methods("POST")
+	r.HandleFunc("/pairs", Log(jwtMiddleware.Handler(server.DeletePairHandler())).ServeHTTP).Methods("DELETE")
+	r.HandleFunc("/pairs", Log(jwtMiddleware.Handler(server.GetPairsHandler())).ServeHTTP).Methods("GET")
+	r.HandleFunc("/containers", Log(jwtMiddleware.Handler(server.GetContainersHandler())).ServeHTTP).Methods("GET")
+	r.HandleFunc("/get_token", Log(http.HandlerFunc(GetTokenHandler)).ServeHTTP).Methods("GET")
 	http.Handle("/", r)
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
@@ -57,7 +57,6 @@ func (server Server) StartServer(){
 // Добавляет в базу данных новый ключ-значение
 func (server Server) AddPairHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
-
 		kv := types.KeyValue{}
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil{
@@ -113,3 +112,9 @@ func (server Server) DeletePairHandler() http.HandlerFunc {
 
 //-----------------------------------------------------------//
 
+func Log(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL, " / ", r.Method)
+		h.ServeHTTP(w, r) //Вызывается хэндлер h
+	})
+}
