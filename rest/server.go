@@ -2,7 +2,6 @@ package rest
 
 import (
 	"encoding/json"
-	"fmt"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
@@ -12,7 +11,7 @@ import (
 	"github.com/vladislavhirko/portaineerPlugin/portainer"
 	"github.com/vladislavhirko/portaineerPlugin/rest/types"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -53,6 +52,7 @@ func (server Server) StartServer(){
 
 	r.HandleFunc("/get_token", Log(http.HandlerFunc(GetTokenHandler)).ServeHTTP).Methods("GET")
 	http.Handle("/", r)
+	log.Info("Server start...")
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
 
@@ -62,15 +62,21 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 		kv := types.KeyValue{}
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil{
+			log.Error(err)
 			http.Error(w, "something wrong", 400)
+			return
 		}
 		err = json.Unmarshal(body, &kv)
 		if err != nil{
+			log.Error(err)
 			http.Error(w, "uncorrect json format", 400)
+			return
 		}
 		err = server.LDB.DBContainerChat.Put(kv.Key, kv.Value)
 		if err != nil{
+			log.Error(err)
 			http.Error(w, "some troubles with database", 400)
+			return
 		}
 		w.Write([]byte("Ok"))
 	}
@@ -78,12 +84,18 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 
 func (server Server) GetContainersHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r * http.Request){
-		fmt.Println(r.Header)
 		err := server.LDB.DBContainerChat.Put("/crazy_volhard", "crazy")
 		if err != nil{
+			log.Error(err)
 			http.Error(w, err.Error(), 400)
+			return
 		}
-		containersJSON, _ := json.Marshal(server.pClient.CurrentContainers)
+		containersJSON, err := json.Marshal(server.pClient.CurrentContainers)
+		if err != nil{
+			log.Error(err)
+			http.Error(w, err.Error(), 400)
+			return
+		}
 		w.Write(containersJSON)
 	}
 }
@@ -92,7 +104,12 @@ func (server Server) GetContainersHandler() http.HandlerFunc {
 func (server Server) GetPairsHandler() http.HandlerFunc{
 	return func (w http.ResponseWriter, r *http.Request) {
 		pairs := server.LDB.DBContainerChat.GetAll()
-		pairsJSON, _ := json.Marshal(pairs)
+		pairsJSON, err := json.Marshal(pairs)
+		if err != nil{
+			log.Error(err)
+			http.Error(w, "", 400)
+			return
+		}
 		w.Write(pairsJSON)
 	}
 }
@@ -101,11 +118,15 @@ func (server Server) DeletePairHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil{
+			log.Error(err)
 			http.Error(w, err.Error(), 400)
+			return
 		}
 		err = server.LDB.DBContainerChat.Delete(string(body))
 		if err != nil{
+			log.Error(err)
 			http.Error(w, err.Error(), 400)
+			return
 		}
 		w.Write([]byte("OK"))
 	}
@@ -116,7 +137,7 @@ func (server Server) DeletePairHandler() http.HandlerFunc {
 
 func Log(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.URL, " / ", r.Method)
+		log.Info(r.URL, " / ", r.Method)
 		h.ServeHTTP(w, r) //Вызывается хэндлер h
 	})
 }

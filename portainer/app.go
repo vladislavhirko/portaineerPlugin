@@ -3,13 +3,13 @@ package portainer
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/vladislavhirko/portaineerPlugin/portainer/types"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"time"
+	log "github.com/sirupsen/logrus"
+
 )
 
 //Структура клиента для портейнера
@@ -93,7 +93,7 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("HU((((R'")
+	log.Info("Tick interval: ", pClient.CheckInterval, ". Time: ", time.Now())
 	pClient.LastContainers = make(types.Containers, 0)
 	pClient.LastContainers = append(pClient.LastContainers, pClient.CurrentContainers...)
 	err = json.Unmarshal(body, &pClient.CurrentContainers)

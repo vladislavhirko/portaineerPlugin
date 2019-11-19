@@ -22,6 +22,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.12.0 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/poy/onpar v0.0.0-20190519213022-ee068f8ea4d1 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/urfave/negroni v1.0.0 // indirect

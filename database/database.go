@@ -1,6 +1,9 @@
 package database
 
-import "github.com/syndtr/goleveldb/leveldb"
+import (
+	"github.com/syndtr/goleveldb/leveldb"
+	log "github.com/sirupsen/logrus"
+)
 
 type LevelDB struct {
 	PathContainerChat string
@@ -25,10 +28,17 @@ func (ldb *LevelDB) Open() error {
 
 func NewLevelDB(path string) (*LevelDB, error) {
 	ldb := &LevelDB{
-		PathContainerChat: path + "storage",
-		DBContainerChat:   &DB{},
-		PathAccounts: path + "accounts",
-		DBAccounts: &DB{},
+		PathContainerChat: path + "Container-chat",
+		DBContainerChat:   &DB{
+			LogContext: log.WithFields(log.Fields{
+				"Module": "Database",
+				"Table": "Container-chat",
+			})},
+		PathAccounts: path + "Accounts",
+		DBAccounts: &DB{LogContext: log.WithFields(log.Fields{
+			"Module": "Database",
+			"Table": "Accounts",
+		})},
 	}
 	err := ldb.Open()
 	if err != nil {

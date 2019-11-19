@@ -6,7 +6,9 @@ import (
 	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/mattermost/types"
 	pTypes "github.com/vladislavhirko/portaineerPlugin/portainer/types"
-	"log"
+	log "github.com/sirupsen/logrus"
+
+
 )
 
 type MattermostClient struct {
@@ -14,6 +16,7 @@ type MattermostClient struct {
 	User    *model.User
 	Chanels types.Chanels
 	DB      database.LevelDB
+	LogContext *log.Entry
 }
 
 func NewMattermostClient(ldb database.LevelDB, address, port string) MattermostClient {
@@ -23,6 +26,9 @@ func NewMattermostClient(ldb database.LevelDB, address, port string) MattermostC
 		User:    &model.User{},
 		Chanels: make(types.Chanels, 0),
 		DB:      ldb,
+		LogContext: log.WithFields(log.Fields{
+			"Module": "Mattermost",
+		}),
 	}
 }
 
@@ -55,10 +61,10 @@ func (mClient *MattermostClient) GetallChanels() error {
 func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patternChanel string) error {
 	// Листает список всех каналов и когда находит тот который в бд, отправляет туда
 	for _, container := range containers {
+		mClient.LogContext.Warn("Container fault ", container)
 		chanelName, err := mClient.DB.DBContainerChat.Get(container.Names[0])
 		if err != nil {
-			log.Println("No chanel for ", container)
-			continue
+			log.Error(err)
 		}
 		for _, chanel := range mClient.Chanels {
 			if chanelName == chanel.Name {

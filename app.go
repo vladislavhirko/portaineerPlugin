@@ -2,23 +2,22 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/vladislavhirko/portaineerPlugin/config"
 	"github.com/vladislavhirko/portaineerPlugin/database"
 	"github.com/vladislavhirko/portaineerPlugin/mattermost"
 	"github.com/vladislavhirko/portaineerPlugin/portainer"
 	"github.com/vladislavhirko/portaineerPlugin/portainer/types"
 	"github.com/vladislavhirko/portaineerPlugin/rest"
-	"log"
 	"os/user"
 	"sync"
 	"time"
+	log "github.com/sirupsen/logrus"
 )
 
 var stopedContainerChan = make(chan types.Containers) //Канал по которому передаются сообщение при падении контейнера
-var wg = sync.WaitGroup{}
 
 func main() {
+	log.Info("run")
 	usr, _ := user.Current()
 	configPath := flag.String("config_path", usr.HomeDir + "/.portaineerPlugin/config.toml", "Path to file config")
 	flag.Parse()
@@ -30,7 +29,8 @@ func main() {
 }
 
 func Starter(config config.Config) {
-	wg.Add(2)
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	levelDB := LDBStart(config.LevelDB)
 	mClient := MattermostStart(levelDB, config.MClient)
 	pClient := PortainerStart(config.PClient)
@@ -76,24 +76,25 @@ func MattermostStart(ldb database.LevelDB, config config.Mattermost) mattermost.
 // далее добавялют в список упавших, создает новый список в котором они хранятся (список упавших после этого чистится)
 // затем отправляет по каналу в функию Sender()
 func DockerChecker(pClient *portainer.ClientPortaineer) {
-	defer wg.Done()
 	for {
-		err := pClient.GetContainerrList()
-		if err != nil {
-			log.Fatal(err)
-		}
-		pClient.FinedDropedContainers()
-		dropedContainers := types.Containers{}
-		if len(pClient.StopedContainers) != 0 {
-			dropedContainers, err = pClient.GetDropedContainer()
-			//fmt.Println("LEEEEEENGTH", dropedContainers)
+		go func() {
+			err := pClient.GetContainerrList()
 			if err != nil {
-				log.Fatal(err)
+				log.Error(err)
 			}
-		}
-		if len(dropedContainers) > 0 {
-			stopedContainerChan <- dropedContainers
-		}
+			pClient.FinedDropedContainers()
+			dropedContainers := types.Containers{}
+			if len(pClient.StopedContainers) != 0 {
+				dropedContainers, err = pClient.GetDropedContainer()
+				//fmt.Println("LEEEEEENGTH", dropedContainers)
+				if err != nil {
+					log.Error(err)
+				}
+			}
+			if len(dropedContainers) > 0 {
+				stopedContainerChan <- dropedContainers
+			}
+		}()
 		time.Sleep(time.Second * pClient.CheckInterval)
 	}
 }
@@ -101,17 +102,16 @@ func DockerChecker(pClient *portainer.ClientPortaineer) {
 // Функция которая рассылает список упавших контейнеров в метермост, пока что во все каналы
 //Закоменчено потому что мы не можем сыпать логи в метермост  пока что
 func Sender(mClient mattermost.MattermostClient) {
-	defer wg.Done()
 	for {
 		dropedContainers := <-stopedContainerChan
 		//fmt.Println("ALAAAAAAH AKBAR", dropedContainers)
 		err := mClient.GetallChanels()
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 		err = mClient.SendMessage(dropedContainers, "")
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 		}
 	}
 }
