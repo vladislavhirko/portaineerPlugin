@@ -35,7 +35,7 @@ type Portainer struct {
 	LogsAmount string `toml:"logs_amount"`
 }
 
-
+//Parse config file
 func GetConfig(path string) (*Config, error) {
 	//fmt.Println(path)
 	//err := CreateEnvironment()

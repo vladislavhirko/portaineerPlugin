@@ -14,7 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var stopedContainerChan = make(chan types.Containers) //Канал по которому передаются сообщение при падении контейнера
+//Chanel by which sending message about stopped containers
+var stopedContainerChan = make(chan types.Containers)
 
 func main() {
 	log.SetLevel(log.TraceLevel)
@@ -29,6 +30,8 @@ func main() {
 	Starter(*systemConfig)
 }
 
+//Create objects for working with leveldb, mattermoost, portainer, server
+//Run three goroutine: sender (send message), checker (check containers state), server (api)
 func Starter(config config.Config) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -37,13 +40,13 @@ func Starter(config config.Config) {
 	pClient := PortainerStart(config.PClient)
 	server := rest.NewServer(config.API, levelDB, pClient)
 
-	go Sender(mClient) //Функция слушающая канал и в случае попадания туда чего либо отправляющая в меттермост
+	go Sender(mClient) //Function that listens to the channel and if something gets there, it sends to the mattermost
 	go DockerChecker(pClient)
-	go server.StartServer() //В будущем тут будет рест
+	go server.StartServer()
 	wg.Wait()
 }
 
-//Функция для открытыя соедниенения с левелдб
+//Function which opens connection with leveldb
 func LDBStart(config config.Level) database.LevelDB {
 	ldb, err := database.NewLevelDB(config.Path)
 	if err != nil {
@@ -52,7 +55,7 @@ func LDBStart(config config.Level) database.LevelDB {
 	return *ldb
 }
 
-//Начало работы с потейнером
+//Starts work with portainer
 func PortainerStart(config config.Portainer) *portainer.ClientPortaineer {
 	pClient := portainer.NewPorteinerClient(config.Address, config.Port, config.CheckInterval, config.LogsAmount)
 	err := pClient.Auth(config.Login, config.Password)
@@ -62,7 +65,7 @@ func PortainerStart(config config.Portainer) *portainer.ClientPortaineer {
 	return pClient
 }
 
-// Создает клиента для работы с меттермостом, логинит пользователя
+//Start work with mattermost, and login client
 func MattermostStart(ldb database.LevelDB, config config.Mattermost) mattermost.MattermostClient {
 	mClient := mattermost.NewMattermostClient(ldb, config.Address, config.Port)
 	err := mClient.Auth(config.Email, config.Password)
@@ -72,10 +75,10 @@ func MattermostStart(ldb database.LevelDB, config config.Mattermost) mattermost.
 	return mClient
 }
 
-//Функция где устанавливает время для таймстемпов и и раз в Х секунд вызываются функции которые
-// тянут список контейнеров, далее ищет те которые упали
-// далее добавялют в список упавших, создает новый список в котором они хранятся (список упавших после этого чистится)
-// затем отправляет по каналу в функию Sender()
+//Function which setup pauses for timestamps every 'X' second and calls function wich
+//takes containers list, after that it trieing to find stoped containers, adds to list of stoped, creats new list
+//for saving these (list of stoped will clean after that)
+//and sends this list by chanel to Sender() function
 func DockerChecker(pClient *portainer.ClientPortaineer) {
 	for {
 		go func() {
@@ -100,8 +103,7 @@ func DockerChecker(pClient *portainer.ClientPortaineer) {
 	}
 }
 
-// Функция которая рассылает список упавших контейнеров в метермост, пока что во все каналы
-//Закоменчено потому что мы не можем сыпать логи в метермост  пока что
+//Which which sends list of stopped containers to mattermost
 func Sender(mClient mattermost.MattermostClient) {
 	for {
 		dropedContainers := <-stopedContainerChan

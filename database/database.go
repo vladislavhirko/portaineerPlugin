@@ -12,7 +12,7 @@ type LevelDB struct {
 	DBAccounts   *DB
 }
 
-//Открывает соединение с базой данных
+//Open connection with database
 func (ldb *LevelDB) Open() error {
 	var err error
 	ldb.DBContainerChat.DB, err = leveldb.OpenFile(ldb.PathContainerChat, nil)
@@ -26,6 +26,7 @@ func (ldb *LevelDB) Open() error {
 	return err
 }
 
+//Setup paths to storage, setup default logs
 func NewLevelDB(path string) (*LevelDB, error) {
 	ldb := &LevelDB{
 		PathContainerChat: path + "Container-chat",

@@ -64,7 +64,7 @@ func (server Server) StartServer(){
 	log.Fatal(http.ListenAndServe(":" + server.Config.Port, handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
 
-// Добавляет в базу данных новый ключ-значение
+// Add pair of container-chat to database
 func (server Server) AddPairHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r *http.Request){
 		kv := types.KeyValue{}
@@ -90,6 +90,7 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 	}
 }
 
+// Get containers list from database
 func (server Server) GetContainersHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r * http.Request){
 		err := server.LDB.DBContainerChat.Put("/crazy_volhard", "crazy")
@@ -114,7 +115,7 @@ func (server Server) GetContainersHandler() http.HandlerFunc {
 	}
 }
 
-//возвращает список ключ-значение (контейнер - чат)
+//Get list of pair (container-chat) from database
 func (server Server) GetPairsHandler() http.HandlerFunc{
 	return func (w http.ResponseWriter, r *http.Request) {
 		pairs := server.LDB.DBContainerChat.GetAll()
@@ -128,6 +129,7 @@ func (server Server) GetPairsHandler() http.HandlerFunc{
 	}
 }
 
+//Deletes pair (container-chat) from database
 func (server Server) DeletePairHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, err := ioutil.ReadAll(r.Body)
@@ -149,9 +151,10 @@ func (server Server) DeletePairHandler() http.HandlerFunc {
 
 //-----------------------------------------------------------//
 
+//Interlayer - logger
 func (server Server) Loger(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.Log.Info(r.URL, " / ", r.Method)
-		h.ServeHTTP(w, r) //Вызывается хэндлер h
+		h.ServeHTTP(w, r) //Calls handler h
 	})
 }

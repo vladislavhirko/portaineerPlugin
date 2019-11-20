@@ -12,7 +12,7 @@ import (
 
 )
 
-//Структура клиента для портейнера
+//Struct of client for portainer
 type ClientPortaineer struct {
 	Jwt               string `json:"jwt"`
 	Username          string
@@ -27,7 +27,7 @@ type ClientPortaineer struct {
 	Log *log.Entry `json:"-"`
 }
 
-//Создание нового клиента портейнера, выделяет память для слайсов контейнеров
+//Creates a new client for work with portainer, and allocate memory for slices of containers
 func NewPorteinerClient(address, port, checkInterval string, logsAmount string) *ClientPortaineer {
 	checkIntervalInt, err := strconv.Atoi(checkInterval)
 	if err != nil {
@@ -51,8 +51,7 @@ func NewPorteinerClient(address, port, checkInterval string, logsAmount string) 
 	}
 }
 
-//Аутентификация по логину и паролю, устанавливает JWT токен,
-//должен передаваться во все последующие запросы на портейнер в заголовке
+//Auth by login and password, setup JWT. All next requests to portainer must contain JWT token
 func (pClient *ClientPortaineer) Auth(login, password string) error {
 	pClient.Username = login
 	pClient.Password = password
@@ -80,6 +79,9 @@ func (pClient *ClientPortaineer) Auth(login, password string) error {
 // Получает список контенеров и устанавливает их в переменную структуры
 // так перед этим сохраняются все контенера работающие до обновления
 // (список контейнеров которые работали Х секунд назад и список который работает сейчас)
+// Takes all containers list and set it to struct variable
+//  thus before this saves all containers which worked before refreshing
+//(containers list which worked 'X' second ago and list which works now)
 func (pClient *ClientPortaineer) GetContainerrList() error {
 	client := &http.Client{}
 	req, err := http.NewRequest(
@@ -104,17 +106,13 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 	if err != nil {
 		return err
 	}
-	//fmt.Println(10)
-	//fmt.Println("Last running containers: ", pClient.LastContainers)
-	//fmt.Println("Current running containers: ", pClient.CurrentContainers, "\n\n")
-
 	return nil
 }
 
-// Находит в списках работающих сейчас контейнеров и работающих Х сек. назад два одинаковых, если такие имеются так же сравнивает статусы
-// так как тут хранятся все контейнера и стопнутые тоже, сравнивает на то разные ли они? и если разные то проверяет на то какой сейчас статус
-// если exited то добавляет в список упавших
 //TODO заменить два слайса на 2 мапы
+//Finds same container in 2 lists (1: which worked 'X' second ago; 2: which workes now).
+//After that compares theis states, if states are different
+//Checks for exited state in last containers list
 func (pClient *ClientPortaineer) FinedDropedContainers() {
 	for _, lastContainer := range pClient.LastContainers {
 		for _, currentContainer := range pClient.CurrentContainers {
@@ -128,10 +126,10 @@ func (pClient *ClientPortaineer) FinedDropedContainers() {
 	}
 }
 
-// Создает список упавших контейнеров которые не восстановились
+// Create list of stoped containerm which didn't recovery
 func (pClient *ClientPortaineer) GetDropedContainer() (types.Containers, error) {
 	stopedWithError := make(types.Containers, 0)
-	err := pClient.GetDropedLogs() //в будущем тут будут доставаться логи упавших контейнеров
+	err := pClient.GetDropedLogs()
 	if err != nil {
 		return nil, err
 	}

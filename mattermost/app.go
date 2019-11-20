@@ -32,7 +32,7 @@ func NewMattermostClient(ldb database.LevelDB, address, port string) MattermostC
 	}
 }
 
-//Логинит пользователя в систему
+//Login user to system
 func (mClient *MattermostClient) Auth(login, password string) error {
 	user, resp := mClient.Client.Login(login, password)
 	if resp.Error != nil {
@@ -42,8 +42,7 @@ func (mClient *MattermostClient) Auth(login, password string) error {
 	return nil
 }
 
-//Получает список всех каналов и кладет в струкутруу
-//
+//Gets list of all chanels and put it to struct
 func (mClient *MattermostClient) GetallChanels() error {
 	chanels, resp := mClient.Client.GetAllChannels(0, 100, "")
 	if resp.Error != nil {
@@ -56,10 +55,11 @@ func (mClient *MattermostClient) GetallChanels() error {
 	return nil
 }
 
-//Отправляет сообщение всем каналам
-// Делается запрос с бд для каждого упавшего контейнера, достаем название канала, далее бегаем по всем каналам и в нужный нам отправляем инфу
+
+//Creates request to database for each stopped container, takes chanel name for each, after that we look through all channels and send information to linked chanel with container
 func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patternChanel string) error {
 	// Листает список всех каналов и когда находит тот который в бд, отправляет туда
+	// Look through all channels and after finding chanel in database, send info to it
 	for _, container := range containers {
 		mClient.LogContext.Warn("Container fault ", container)
 		chanelName, err := mClient.DB.DBContainerChat.Get(container.Names[0])
