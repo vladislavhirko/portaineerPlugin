@@ -1,35 +1,54 @@
 package rest
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/vladislavhirko/portaineerPlugin/rest/types"
+	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-var mySigningKey = []byte("das3f12A32f32a33efA3E32F32f3e2FW32f32e")
-
-type MyClaims struct {
-	Name string `json:"name"`
-	Admin bool `json:"admin"`
-	jwt.StandardClaims
-}
-
 //Генерит и возвращает токен клиенту
-func GetTokenHandler(w http.ResponseWriter, r *http.Request){
-	expirationTime := time.Now().Add(168 * time.Hour)
-	// Устанавливаем набор параметров для токена
-	claims := MyClaims{
-		"john_lenon",
-		true,
-		jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
-		},
+func (server Server) GetTokenHandler()  http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil{
+			http.Error(w, "", 400)
+			server.Log.Error(err)
+			return
+		}
+		kv := types.KeyValue{}
+		err = json.Unmarshal(body, &kv)
+		path, err := server.LDB.DBAccounts.Get(kv.Key)
+		if err != nil{
+			http.Error(w, "", 400)
+			server.Log.Error(errors.New("No account with carrent name"))
+			return
+		}
+		if path != kv.Value{
+			http.Error(w, "", 400)
+
+			server.Log.Error(errors.New("Pass is not match"))
+			return
+		}
+
+		expirationTime := time.Now().Add(168 * time.Hour)
+		// Устанавливаем набор параметров для токена
+		server.JWTAuth.Claims = types.MyClaims{
+			kv.Key,
+			true,
+			jwt.StandardClaims{
+				ExpiresAt: expirationTime.Unix(),
+			},
+		}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, server.JWTAuth.Claims)
+		// Подписываем токен нашим секретным ключем
+		tokenString, _ := token.SignedString(server.JWTAuth.SigningKey)
+		// Отдаем токен клиенту
+		w.Write([]byte(tokenString))
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// Подписываем токен нашим секретным ключем
-	tokenString, _ := token.SignedString(mySigningKey)
-	// Отдаем токен клиенту
-	w.Write([]byte(tokenString))
 }
 
 

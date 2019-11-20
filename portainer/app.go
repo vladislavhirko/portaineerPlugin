@@ -23,7 +23,8 @@ type ClientPortaineer struct {
 	CurrentContainers types.Containers
 	LastContainers    types.Containers
 	StopedContainers  types.Containers
-	LogsAmount        string
+	ContainerLogsAmount        string
+	Log *log.Entry `json:"-"`
 }
 
 //Создание нового клиента портейнера, выделяет память для слайсов контейнеров
@@ -43,7 +44,10 @@ func NewPorteinerClient(address, port, checkInterval string, logsAmount string) 
 		CurrentContainers: make(types.Containers, 0),
 		LastContainers:    make(types.Containers, 0),
 		StopedContainers:  make(types.Containers, 0),
-		LogsAmount:        logsAmount,
+		ContainerLogsAmount:        logsAmount,
+		Log: log.WithFields(log.Fields{
+				"Module": "Portainer",
+			}),
 	}
 }
 
@@ -93,7 +97,7 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 	if err != nil {
 		return err
 	}
-	log.Info("Tick interval: ", pClient.CheckInterval, ". Time: ", time.Now())
+	pClient.Log.Trace("Tick interval: ", pClient.CheckInterval, ". Time: ", time.Now())
 	pClient.LastContainers = make(types.Containers, 0)
 	pClient.LastContainers = append(pClient.LastContainers, pClient.CurrentContainers...)
 	err = json.Unmarshal(body, &pClient.CurrentContainers)
@@ -144,7 +148,7 @@ func (pClient *ClientPortaineer) GetDropedLogs() error {
 		req, err := http.NewRequest(
 			"GET",
 			"http://"+pClient.Address+":"+pClient.Port+"/api/endpoints/1/docker/containers/"+
-				pClient.StopedContainers[i].Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail="+pClient.LogsAmount,
+				pClient.StopedContainers[i].Id[:12]+"/logs?stderr=1&stdout=1&follow=1&tail="+pClient.ContainerLogsAmount,
 			nil,
 		)
 		if err != nil {

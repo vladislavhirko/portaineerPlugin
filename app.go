@@ -17,7 +17,8 @@ import (
 var stopedContainerChan = make(chan types.Containers) //Канал по которому передаются сообщение при падении контейнера
 
 func main() {
-	log.Info("run")
+	log.SetLevel(log.TraceLevel)
+	log.Info("Run")
 	usr, _ := user.Current()
 	configPath := flag.String("config_path", usr.HomeDir + "/.portaineerPlugin/config.toml", "Path to file config")
 	flag.Parse()
