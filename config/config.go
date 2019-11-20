@@ -9,6 +9,7 @@ type Config struct {
 	LevelDB Level      `toml:"level"`
 	MClient Mattermost `toml:"mattermost"`
 	PClient Portainer  `toml:"portainer"`
+	LogLevel Log	`toml:"log"`
 }
 
 type API struct{
@@ -17,6 +18,10 @@ type API struct{
 
 type Level struct {
 	Path string `toml:"path"`
+}
+
+type Log struct{
+	Level string `toml:"level"`
 }
 
 type Mattermost struct {
@@ -44,6 +49,7 @@ func GetConfig(path string) (*Config, error) {
 		LevelDB: *new(Level),
 		MClient: *new(Mattermost),
 		PClient: *new(Portainer),
+		LogLevel: *new(Log),
 	}
 	_, err := toml.DecodeFile(path, &config)
 	if err != nil {

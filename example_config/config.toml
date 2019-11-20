@@ -36,3 +36,13 @@
 [api]
     #Port wich we will listen in rest
     port = "1119"
+
+[log]
+    #panic
+    #fatal
+    #error
+    #warn
+    #info
+    #debug
+    #trace
+    level = "trace"

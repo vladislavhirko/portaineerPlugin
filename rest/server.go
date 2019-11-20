@@ -94,6 +94,7 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 func (server Server) GetContainersHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r * http.Request){
 		err := server.LDB.DBContainerChat.Put("/crazy_volhard", "crazy")
+		err = server.LDB.DBContainerChat.Put("/elated_brattain", "roman")
 		if err != nil{
 			server.Log.Error(err)
 			http.Error(w, err.Error(), 400)

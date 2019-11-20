@@ -18,7 +18,6 @@ import (
 var stopedContainerChan = make(chan types.Containers)
 
 func main() {
-	log.SetLevel(log.TraceLevel)
 	log.Info("Run")
 	usr, _ := user.Current()
 	configPath := flag.String("config_path", usr.HomeDir + "/.portaineerPlugin/config.toml", "Path to file config")
@@ -27,6 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	SetLogLevel(systemConfig.LogLevel.Level)
 	Starter(*systemConfig)
 }
 
@@ -117,4 +117,12 @@ func Sender(mClient mattermost.MattermostClient) {
 			log.Error(err)
 		}
 	}
+}
+
+func SetLogLevel(level string){
+	logLevel, err := log.ParseLevel(level)
+	if err != nil{
+		log.Fatal(err)
+	}
+	log.SetLevel(logLevel)
 }

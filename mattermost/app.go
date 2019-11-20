@@ -16,7 +16,7 @@ type MattermostClient struct {
 	User    *model.User
 	Chanels types.Chanels
 	DB      database.LevelDB
-	LogContext *log.Entry
+	Log *log.Entry
 }
 
 func NewMattermostClient(ldb database.LevelDB, address, port string) MattermostClient {
@@ -26,7 +26,7 @@ func NewMattermostClient(ldb database.LevelDB, address, port string) MattermostC
 		User:    &model.User{},
 		Chanels: make(types.Chanels, 0),
 		DB:      ldb,
-		LogContext: log.WithFields(log.Fields{
+		Log: log.WithFields(log.Fields{
 			"Module": "Mattermost",
 		}),
 	}
@@ -61,7 +61,7 @@ func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patte
 	// Листает список всех каналов и когда находит тот который в бд, отправляет туда
 	// Look through all channels and after finding chanel in database, send info to it
 	for _, container := range containers {
-		mClient.LogContext.Warn("Container fault ", container)
+		mClient.Log.Warn("Container fault ", container.Names)
 		chanelName, err := mClient.DB.DBContainerChat.Get(container.Names[0])
 		if err != nil {
 			log.Error(err)
