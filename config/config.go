@@ -14,6 +14,7 @@ type Config struct {
 
 type API struct{
 	Port string `toml:"port"`
+	JWTSignKey string `toml:"jwt_signing_key"`
 }
 
 type Level struct {

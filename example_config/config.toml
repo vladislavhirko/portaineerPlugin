@@ -36,6 +36,8 @@
 [api]
     #Port wich we will listen in rest
     port = "1119"
+    #Key which will sing all jwt token
+    jwt_signing_key = "das3f12A32f32a33efA3E32F32f3e2FW32f32e"
 
 [log]
     #panic

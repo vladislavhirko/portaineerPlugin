@@ -30,7 +30,7 @@ func NewServer(config config.API, ldb database.LevelDB, pClient *portainer.Clien
 		LDB:     ldb,
 		pClient: pClient,
 		JWTAuth: types.JWTAuth{
-			SigningKey: []byte("das3f12A32f32a33efA3E32F32f3e2FW32f32e"),
+			SigningKey: []byte(config.JWTSignKey),
 			Claims:     types.MyClaims{},
 		},
 		Log:  log.WithFields(log.Fields{
