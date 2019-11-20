@@ -55,7 +55,7 @@ func (server Server) StartServer(){
 
 	r := mux.NewRouter()
 	r.HandleFunc("/pairs", server.Loger(jwtMiddleware.Handler(server.AddPairHandler())).ServeHTTP).Methods("POST")
-	r.HandleFunc("/pairs/{container}", server.Loger(jwtMiddleware.Handler(server.DeletePairHandler())).ServeHTTP).Methods("DELETE")
+	r.HandleFunc("/pairs/{container_name}", server.Loger(jwtMiddleware.Handler(server.DeletePairHandler())).ServeHTTP).Methods("DELETE")
 	//r.HandleFunc("/pairs/{Container}", server.Loger(server.DeletePairHandler()).ServeHTTP).Methods("DELETE")
 	r.HandleFunc("/pairs", server.Loger(jwtMiddleware.Handler(server.GetPairsHandler())).ServeHTTP).Methods("GET")
 	//r.HandleFunc("/containers", Log(jwtMiddleware.Handler(server.GetContainersHandler())).ServeHTTP).Methods("GET")
@@ -166,9 +166,9 @@ func (server Server) DeletePairHandler() http.HandlerFunc {
 		//	return
 		//}
 		params := mux.Vars(r)
-		container := params["Container"]
+		container := params["container_name"]
 		fmt.Println(container)
-		err := server.LDB.DBContainerChat.Delete("")
+		err := server.LDB.DBContainerChat.Delete(container)
 		if err != nil{
 			server.ErrorHandler(types.ErrorGroup{
 				StatusCode:     403,
