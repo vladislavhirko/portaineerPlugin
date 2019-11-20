@@ -76,9 +76,6 @@ func (pClient *ClientPortaineer) Auth(login, password string) error {
 	return nil
 }
 
-// Получает список контенеров и устанавливает их в переменную структуры
-// так перед этим сохраняются все контенера работающие до обновления
-// (список контейнеров которые работали Х секунд назад и список который работает сейчас)
 // Takes all containers list and set it to struct variable
 //  thus before this saves all containers which worked before refreshing
 //(containers list which worked 'X' second ago and list which works now)

@@ -1,6 +1,9 @@
 package types
 
-import "github.com/dgrijalva/jwt-go"
+import (
+	"github.com/dgrijalva/jwt-go"
+	"net/http"
+)
 
 type KeyValue struct{
 	Key string `json:"key,name"`
@@ -16,4 +19,10 @@ type MyClaims struct {
 	Name string `json:"name"`
 	Admin bool `json:"admin"`
 	jwt.StandardClaims
+}
+
+type ErrorGroup struct {
+	StatusCode int
+	Error error
+	ResponseWriter http.ResponseWriter
 }

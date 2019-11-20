@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
@@ -54,7 +55,8 @@ func (server Server) StartServer(){
 
 	r := mux.NewRouter()
 	r.HandleFunc("/pairs", server.Loger(jwtMiddleware.Handler(server.AddPairHandler())).ServeHTTP).Methods("POST")
-	r.HandleFunc("/pairs", server.Loger(jwtMiddleware.Handler(server.DeletePairHandler())).ServeHTTP).Methods("DELETE")
+	r.HandleFunc("/pairs/{container}", server.Loger(jwtMiddleware.Handler(server.DeletePairHandler())).ServeHTTP).Methods("DELETE")
+	//r.HandleFunc("/pairs/{Container}", server.Loger(server.DeletePairHandler()).ServeHTTP).Methods("DELETE")
 	r.HandleFunc("/pairs", server.Loger(jwtMiddleware.Handler(server.GetPairsHandler())).ServeHTTP).Methods("GET")
 	//r.HandleFunc("/containers", Log(jwtMiddleware.Handler(server.GetContainersHandler())).ServeHTTP).Methods("GET")
 	r.HandleFunc("/containers", server.GetContainersHandler()).Methods("GET")
@@ -70,20 +72,29 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 		kv := types.KeyValue{}
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, "something wrong", 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		err = json.Unmarshal(body, &kv)
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, "uncorrect json format", 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		err = server.LDB.DBContainerChat.Put(kv.Key, kv.Value)
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, "some troubles with database", 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		w.Write([]byte("Ok"))
@@ -96,20 +107,29 @@ func (server Server) GetContainersHandler() http.HandlerFunc {
 		err := server.LDB.DBContainerChat.Put("/crazy_volhard", "crazy")
 		err = server.LDB.DBContainerChat.Put("/elated_brattain", "roman")
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, err.Error(), 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		err = server.LDB.DBAccounts.Put("admin", "adminadmin")
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, err.Error(), 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		containersJSON, err := json.Marshal(server.pClient.CurrentContainers)
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, err.Error(), 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		w.Write(containersJSON)
@@ -122,8 +142,11 @@ func (server Server) GetPairsHandler() http.HandlerFunc{
 		pairs := server.LDB.DBContainerChat.GetAll()
 		pairsJSON, err := json.Marshal(pairs)
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, "", 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     400,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		w.Write(pairsJSON)
@@ -133,16 +156,25 @@ func (server Server) GetPairsHandler() http.HandlerFunc{
 //Deletes pair (container-chat) from database
 func (server Server) DeletePairHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, err := ioutil.ReadAll(r.Body)
+		//body, err := ioutil.ReadAll(r.Body)
+		//if err != nil{
+		//	server.ErrorHandler(types.ErrorGroup{
+		//		StatusCode:     400,
+		//		Error:       err,
+		//		ResponseWriter: w,
+		//	})
+		//	return
+		//}
+		params := mux.Vars(r)
+		container := params["Container"]
+		fmt.Println(container)
+		err := server.LDB.DBContainerChat.Delete("")
 		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, err.Error(), 400)
-			return
-		}
-		err = server.LDB.DBContainerChat.Delete(string(body))
-		if err != nil{
-			server.Log.Error(err)
-			http.Error(w, err.Error(), 400)
+			server.ErrorHandler(types.ErrorGroup{
+				StatusCode:     403,
+				Error:       err,
+				ResponseWriter: w,
+			})
 			return
 		}
 		w.Write([]byte("OK"))
@@ -158,4 +190,9 @@ func (server Server) Loger(h http.Handler) http.Handler {
 		server.Log.Info(r.URL, " / ", r.Method)
 		h.ServeHTTP(w, r) //Calls handler h
 	})
+}
+
+func (server Server) ErrorHandler(errGroup types.ErrorGroup){
+	server.Log.Error(errGroup.Error)
+	http.Error(errGroup.ResponseWriter, "", errGroup.StatusCode)
 }
