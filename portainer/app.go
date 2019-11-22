@@ -65,6 +65,7 @@ func (pClient *ClientPortaineer) Auth(login, password string) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -92,6 +93,7 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
@@ -154,6 +156,7 @@ func (pClient *ClientPortaineer) GetDropedLogs() error {
 		if err != nil {
 			return err
 		}
+		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		//fmt.Println(string(body))
 		pClient.StopedContainers[i].Logs = string(body)

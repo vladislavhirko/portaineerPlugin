@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	SetLogLevel(systemConfig.LogLevel.Level)
+	LogerSetup(systemConfig.LogLevel.Level)
 	Starter(*systemConfig)
 }
 
@@ -119,7 +119,12 @@ func Sender(mClient mattermost.MattermostClient) {
 	}
 }
 
-func SetLogLevel(level string){
+func LogerSetup(level string){
+	customFormatter := new(log.TextFormatter)
+	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
+	log.SetFormatter(customFormatter)
+	customFormatter.FullTimestamp = true
+
 	logLevel, err := log.ParseLevel(level)
 	if err != nil{
 		log.Fatal(err)
