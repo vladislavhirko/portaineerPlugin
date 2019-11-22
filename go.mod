@@ -19,6 +19,7 @@ require (
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/mattermost/gorp v2.0.0+incompatible // indirect
 	github.com/mattermost/mattermost-server v5.11.1+incompatible
+	github.com/mattermost/mattermost-webapp v5.17.0+incompatible // indirect
 	github.com/mattn/go-sqlite3 v1.12.0 // indirect
 	github.com/pborman/uuid v1.2.0 // indirect
 	github.com/poy/onpar v0.0.0-20190519213022-ee068f8ea4d1 // indirect

@@ -62,6 +62,8 @@ github.com/mattermost/gorp v2.0.0+incompatible h1:/aLYsuWjk4kSVP3P3kn3zTGNUQxaCB
 github.com/mattermost/gorp v2.0.0+incompatible/go.mod h1:0kX1qa3DOpaPJyOdMLeo7TcBN0QmUszj9a/VygOhDe0=
 github.com/mattermost/mattermost-server v5.11.1+incompatible h1:LPzKY0+2Tic/ik67qIg6VrydRCgxNXZQXOeaiJ2rMBY=
 github.com/mattermost/mattermost-server v5.11.1+incompatible/go.mod h1:5L6MjAec+XXQwMIt791Ganu45GKsSiM+I0tLR9wUj8Y=
+github.com/mattermost/mattermost-webapp v5.17.0+incompatible h1:pR1mYXBjiQOKqgIIkJfLezuik9G1j8T29X4cafWX0yw=
+github.com/mattermost/mattermost-webapp v5.17.0+incompatible/go.mod h1:OLihPit59TaMgAF3A6m8attoe/VLZnlVFxvZ9iAFPfU=
 github.com/mattn/go-sqlite3 v1.12.0 h1:u/x3mp++qUxvYfulZ4HKOvVO0JWhk7HtE8lWhbGz/Do=
 github.com/mattn/go-sqlite3 v1.12.0/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
 github.com/nicksnyder/go-i18n v2.0.2+incompatible h1:Xt6dluut3s2zBUha8/3sj6atWMQbFioi9OMqUGH9khg=

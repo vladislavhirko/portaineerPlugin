@@ -18,7 +18,7 @@
 
     #Address and port which will used in https request to portainer
     address = "localhost"
-    port = "1122"
+    port = "9001"
 
     #Time in seconds wich mean how often pragram will check fallen containers
     check_interval = "3"
@@ -30,7 +30,7 @@
 [level]
 
     #Path to level db
-    path = "$HOME/.portaineerPlugin/storage/"
+    path = "/.portaineer_plugin/storage/"
 
 #Configuration for server
 [api]

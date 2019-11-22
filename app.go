@@ -20,7 +20,7 @@ var stopedContainerChan = make(chan types.Containers)
 func main() {
 	log.Info("Run")
 	usr, _ := user.Current()
-	configPath := flag.String("config_path", usr.HomeDir + "/.portaineerPlugin/config.toml", "Path to file config")
+	configPath := flag.String("config_path", usr.HomeDir + "/.portaineer_plugin/config.toml", "Path to file config")
 	flag.Parse()
 	systemConfig, err := config.GetConfig(*configPath)
 	if err != nil {
@@ -70,7 +70,7 @@ func MattermostStart(ldb database.LevelDB, config config.Mattermost) mattermost.
 	mClient := mattermost.NewMattermostClient(ldb, config.Address, config.Port)
 	err := mClient.Auth(config.Email, config.Password)
 	if err != nil {
-		log.Fatal(err)
+		//log.Fatal(err)
 	}
 	return mClient
 }

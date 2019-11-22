@@ -3,6 +3,7 @@ package database
 import (
 	"github.com/syndtr/goleveldb/leveldb"
 	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 type LevelDB struct {
@@ -15,11 +16,16 @@ type LevelDB struct {
 //Open connection with database
 func (ldb *LevelDB) Open() error {
 	var err error
-	ldb.DBContainerChat.DB, err = leveldb.OpenFile(ldb.PathContainerChat, nil)
+
+	homeDir, err := os.UserHomeDir()
 	if err != nil{
 		return err
 	}
-	ldb.DBAccounts.DB, err = leveldb.OpenFile(ldb.PathAccounts, nil)
+	ldb.DBContainerChat.DB, err = leveldb.OpenFile(homeDir + ldb.PathContainerChat, nil)
+	if err != nil{
+		return err
+	}
+	ldb.DBAccounts.DB, err = leveldb.OpenFile(homeDir + ldb.PathAccounts, nil)
 	if err != nil{
 		return err
 	}
@@ -29,13 +35,13 @@ func (ldb *LevelDB) Open() error {
 //Setup paths to storage, setup default logs
 func NewLevelDB(path string) (*LevelDB, error) {
 	ldb := &LevelDB{
-		PathContainerChat: path + "Container-chat",
+		PathContainerChat: path + "/container-chat",
 		DBContainerChat:   &DB{
 			LogContext: log.WithFields(log.Fields{
 				"Module": "Database",
 				"Table": "Container-chat",
 			})},
-		PathAccounts: path + "Accounts",
+		PathAccounts: path + "/accounts",
 		DBAccounts: &DB{LogContext: log.WithFields(log.Fields{
 			"Module": "Database",
 			"Table": "Accounts",
