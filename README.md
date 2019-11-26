@@ -1,8 +1,12 @@
-###Description
+
+### Description
+
 This application checkes docker containers 
 and when any containers stopped, it will 
 send message to mattermost
-###Project structure
+
+### Project structure
+
 1. *__config__* - this package parses config.toml
 2. *__database__* - contains CRUD for leveldb. Consist of 2 tables: 
     * first for saving key-pair container_name - chat_name
@@ -21,7 +25,7 @@ chanel to mattermost
 7. *__rest__* - Create JWT token for auth. 
 Contains handlers, which provides working with CRUD.
 
-###Run and install
+### Run and install
 
 Project contains makefile. So ```make run``` will running 
 this app, but at start it will copy __config.toml__ 
@@ -29,7 +33,7 @@ from *example_config* to *$HOME/.portainer_plugin*.
 ```make install``` will create binary file and also 
 will copied config file.
 
-###Config
+### Config
 
 In config file contains settings for each package. 
 Address and port for connection to portainer and mattermost, 
