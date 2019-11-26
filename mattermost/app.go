@@ -66,6 +66,7 @@ func (mClient *MattermostClient) SendMessage(containers pTypes.Containers, patte
 		if err != nil {
 			log.Error(err)
 		}
+
 		for _, chanel := range mClient.Chanels {
 			if chanelName == chanel.Name {
 				post := &model.Post{}

@@ -98,7 +98,7 @@ func (pClient *ClientPortaineer) GetContainerrList() error {
 	if err != nil {
 		return err
 	}
-	pClient.Log.Trace("Tick interval: ", pClient.CheckInterval, ". Time: ", time.Now())
+	pClient.Log.Trace("Tick interval: ", pClient.CheckInterval)
 	pClient.LastContainers = make(types.Containers, 0)
 	pClient.LastContainers = append(pClient.LastContainers, pClient.CurrentContainers...)
 	err = json.Unmarshal(body, &pClient.CurrentContainers)

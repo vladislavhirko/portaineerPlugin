@@ -104,8 +104,7 @@ func (server Server) AddPairHandler() http.HandlerFunc {
 // Get containers list from database
 func (server Server) GetContainersHandler() http.HandlerFunc {
 	return func (w http.ResponseWriter, r * http.Request){
-		err := server.LDB.DBContainerChat.Put("/crazy_volhard", "crazy")
-		err = server.LDB.DBContainerChat.Put("/elated_brattain", "roman")
+		err := server.LDB.DBContainerChat.Put("/nice_shamir", "shamir")
 		if err != nil{
 			server.ErrorHandler(types.ErrorGroup{
 				StatusCode:     400,
@@ -156,15 +155,6 @@ func (server Server) GetPairsHandler() http.HandlerFunc{
 //Deletes pair (container-chat) from database
 func (server Server) DeletePairHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//body, err := ioutil.ReadAll(r.Body)
-		//if err != nil{
-		//	server.ErrorHandler(types.ErrorGroup{
-		//		StatusCode:     400,
-		//		Error:       err,
-		//		ResponseWriter: w,
-		//	})
-		//	return
-		//}
 		params := mux.Vars(r)
 		container := params["container_name"]
 		fmt.Println(container)
